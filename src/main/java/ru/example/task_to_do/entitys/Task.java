@@ -32,7 +32,12 @@ public class Task {
         this.completed = completed;
         this.user = user;
     }
-
+    
+    public void setTask(Task task) {
+    	 this.title = task.getTitle();
+         this.description = task.getDescription();
+         this.completed = task.isCompleted();
+    }
 
     public Long getId() {
         return id;
