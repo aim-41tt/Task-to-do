@@ -30,7 +30,8 @@ public class TaskService {
 	}
 
 	@Async
-	public CompletableFuture<Task> saveTasks(Task task) {
+	public CompletableFuture<Task> saveTasks(Task task, UserDetails userDetails) {
+		task.setUser(userRep.findByUsername(userDetails.getUsername()).get());
 		return CompletableFuture.supplyAsync(() -> taskRep.save(task));
 	}
 	

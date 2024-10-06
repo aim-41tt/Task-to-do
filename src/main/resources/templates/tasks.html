@@ -20,7 +20,9 @@
 </head>
 <body>
     <h1>Мои задачи</h1>
-
+	
+	<a href="/tasks/new">Создать новую задачу</a>
+		
     <div>
         <table>
             <thead>
@@ -38,10 +40,11 @@
                 </tr>
             </tbody>
         </table>
-
+		
         <div th:if="${#lists.isEmpty(tasks)}">
             <p>У вас пока нет задач.</p>
         </div>
     </div>
+	
 </body>
 </html>
