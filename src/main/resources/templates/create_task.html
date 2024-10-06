@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Создание задачи</title>
+</head>
+<body>
+    <h1>Создание новой задачи</h1>
+    <form action="#" th:action="@{/tasks/create}" th:object="${task}" method="post">
+        <label for="title">Название:</label>
+        <input type="text" id="title" th:field="*{title}" required /><br/>
+
+        <label for="description">Описание:</label>
+        <textarea id="description" th:field="*{description}" required></textarea><br/>
+
+        <button type="submit">Создать задачу</button>
+    </form>
+    <a href="/tasks">Назад к задачам</a>
+</body>
+</html>
