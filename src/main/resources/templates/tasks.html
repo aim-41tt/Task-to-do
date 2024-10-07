@@ -20,9 +20,16 @@
 </head>
 <body>
     <h1>Мои задачи</h1>
-	
-	<a href="/tasks/new">Создать новую задачу</a>
-		
+    <div>
+        <a href="/tasks/new" style="display: block; margin: 10px 0;">
+            <button>Создать новую задачу</button>
+        </a>
+    </div>
+    <div>
+        <a href="/" style="display: block; margin: 10px 0;">
+            <button>меню</button>
+        </a>
+    </div>
     <div>
         <table>
             <thead>
@@ -30,6 +37,7 @@
                     <th>Название</th>
                     <th>Описание</th>
                     <th>Завершено</th>
+                    <th>Действия</th> <!-- Новый столбец для действий -->
                 </tr>
             </thead>
             <tbody>
@@ -37,14 +45,26 @@
                     <td th:text="${task.title}"></td>
                     <td th:text="${task.description}"></td>
                     <td th:text="${task.completed} ? 'Да' : 'Нет'"></td>
+                    <td>
+                        <!-- Кнопка для обновления задачи -->
+                        <a th:href="@{/tasks/update/{id}(id=${task.id})}">
+                            <button>Обновить</button>
+                        </a>
+                        
+            			<form th:action="@{/tasks/{id}(id=${task.id})}" method="post" onsubmit="return confirm('Вы уверены, что хотите удалить эту задачу?');">
+                			<input type="hidden" name="_method" value="delete" />
+                			<button type="submit">Удалить</button>
+           				</form>
+       
+                    </td>
                 </tr>
             </tbody>
         </table>
-		
+        
         <div th:if="${#lists.isEmpty(tasks)}">
             <p>У вас пока нет задач.</p>
         </div>
     </div>
-	
+    
 </body>
 </html>

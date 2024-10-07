@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Обновить задачу</title>
+</head>
+<body>
+    <h1>Обновить задачу</h1>
+    <a href="/menu">меню</a>
+    <form th:action="@{/tasks/update/{id}(id=${task.id})}" method="post">
+    	<input type="hidden" th:field="*{task.user.id}" />
+        <div>
+            <label for="title">Название:</label>
+            <input type="text" id="title" name="title" th:value="${task.title}" required>
+        </div>
+        <div>
+            <label for="description">Описание:</label>
+            <textarea id="description" name="description" required th:text="${task.description}"></textarea>
+        </div>
+        <div>
+            <label for="completed">Завершено:</label>
+            <input type="checkbox" id="completed" name="completed" th:checked="${task.completed}">
+        </div>
+        <div>
+            <button type="submit">Сохранить изменения</button>
+        </div>
+    </form>
+</body>
+</html>

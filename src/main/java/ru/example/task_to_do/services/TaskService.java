@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ru.example.task_to_do.entitys.Task;
+import ru.example.task_to_do.entitys.User;
 import ru.example.task_to_do.repositorys.TaskRepository;
 import ru.example.task_to_do.repositorys.UserRepository;
 
@@ -19,10 +20,8 @@ import ru.example.task_to_do.repositorys.UserRepository;
 public class TaskService {
 
 	private TaskRepository taskRep;
-	private UserRepository userRep; 
+	private UserRepository userRep;
 
-	
-	
 	public TaskService(TaskRepository taskRep, UserRepository userRep) {
 		this.taskRep = taskRep;
 		this.userRep = userRep;
@@ -33,11 +32,25 @@ public class TaskService {
 		task.setUser(userRep.findByUsername(userDetails.getUsername()).get());
 		return CompletableFuture.supplyAsync(() -> taskRep.save(task));
 	}
-	
 	@Async
-	public CompletableFuture<List<Task>> findTasksByUser(UserDetails user) {
-		return CompletableFuture.supplyAsync(() -> taskRep.findByUser(userRep.findByUsername(user.getUsername()).get())
-				.orElseGet(ArrayList::new));
+	public CompletableFuture<Task> findTaskById(Long taskId, UserDetails userDetails) {
+	    return CompletableFuture.supplyAsync(() -> {
+	        return userRep.findByUsernameWithTasks(userDetails.getUsername())
+	            .flatMap(user -> {
+	                return user.getTasks().parallelStream()
+	                    .filter(task -> task.getId().equals(taskId))  
+	                    .findFirst();
+	            }).get();
+	    });
+	}
+
+	@Async
+	public CompletableFuture<List<Task>> findTasksByUser(UserDetails userDetails) {
+		return CompletableFuture.supplyAsync(() -> {
+			return userRep.findByUsernameWithTasks(userDetails.getUsername())
+					.map(User::getTasks)
+					.orElseGet(ArrayList::new);
+		});
 	}
 
 	@Async
@@ -46,23 +59,35 @@ public class TaskService {
 			return taskRep.deleteTaskById(task.getId());
 		});
 	}
-
+	
 	@Async
-	public CompletableFuture<Boolean> updateTaskForUser(Task task) {
-		if (task == null || task.getId() == null) {
-			return CompletableFuture.completedFuture(false);
-		}
+	public CompletableFuture<Boolean> updateTaskForUser(Task task, UserDetails userDetails) {
+	    if (task == null || task.getId() == null) {
+	        return CompletableFuture.completedFuture(false);
+	    }
+	    
+	    return CompletableFuture.supplyAsync(() -> {
+	        Optional<User> userOpt = userRep.findByUsernameWithTasks(userDetails.getUsername());
 
-		return CompletableFuture.supplyAsync(() -> {
-			Optional<Task> optionalTask = taskRep.findById(task.getId());
-			if (optionalTask.isPresent()) {
-				Task existingTask = optionalTask.get();
-				existingTask.setTask(existingTask);
-				taskRep.save(existingTask);
-				return true;
-			} else {
-				return false;
-			}
-		});
+	        if (userOpt.isPresent()) {
+	            User user = userOpt.get();
+	            boolean isUserTask = user.getTasks()
+	            		.parallelStream()
+	                    .anyMatch(t -> t.getId().equals(task.getId()));
+	            if (!isUserTask) {
+	                return false;
+	            }
+
+	            Optional<Task> optionalTask = taskRep.findById(task.getId());
+	            if (optionalTask.isPresent()) {
+	                Task existingTask = optionalTask.get();
+	                existingTask.setTask(task);
+	                taskRep.save(existingTask);
+	                return true;
+	            }
+	        }
+	        return false;
+	    });
 	}
+
 }

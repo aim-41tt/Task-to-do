@@ -10,6 +10,7 @@ import ru.example.task_to_do.entitys.Task;
 import ru.example.task_to_do.services.TaskService;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Controller
 @RequestMapping("/tasks")
@@ -33,12 +34,41 @@ public class TaskController {
 	@GetMapping("/new")
 	public String showCreateTaskForm(Model model) {
 		model.addAttribute("task", new Task());
-		return "create_task"; 
+		return "create_task";
 	}
 
 	@PostMapping("/create")
 	public String createTask(@ModelAttribute Task task, @AuthenticationPrincipal UserDetails userDetails) {
 		taskService.saveTasks(task, userDetails);
 		return "redirect:/tasks";
+	}
+
+	@GetMapping("/update/{id}")
+	public CompletableFuture<String> updateTaskForm(@PathVariable Long id,
+			@AuthenticationPrincipal UserDetails userDetails, Model model) {
+
+		return CompletableFuture.supplyAsync(() -> {
+
+			try {
+				model.addAttribute("task", taskService.findTaskById(id, userDetails).get());
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return "updateTask";
+		});
+	}
+
+	@PostMapping("/update/{id}")
+	public CompletableFuture<String> updateTask(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails,
+			@ModelAttribute Task task) {
+
+		return CompletableFuture.supplyAsync(() -> {
+			taskService.updateTaskForUser(task, userDetails);
+			return "redirect:/tasks";
+		});
 	}
 }

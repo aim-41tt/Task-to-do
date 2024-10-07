@@ -1,6 +1,8 @@
 package ru.example.task_to_do.entitys;
 
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -25,7 +27,7 @@ public class User {
     private Role role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Task> tasks;
+    private List<Task> tasks = new ArrayList<Task>();
 
     public User() {
     }
@@ -84,4 +86,11 @@ public class User {
     public void setTasks(List<Task> tasks) {
         this.tasks = tasks;
     }
+
+	@Override
+	public String toString() {
+		return "User [id=" + id + ", username=" + username + ", email=" + email + ", role="
+				+ role + "]";
+	}
+    
 }
