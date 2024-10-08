@@ -11,6 +11,8 @@ import ru.example.task_to_do.services.TaskService;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Controller
 @RequestMapping("/tasks")
@@ -71,4 +73,16 @@ public class TaskController {
 			return "redirect:/tasks";
 		});
 	}
+
+	@PostMapping("/del/{id}")
+	public CompletableFuture<String> postMethodName(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, @ModelAttribute Task task) {
+		return CompletableFuture.supplyAsync(()->{
+			if (!taskService.delTaskForUser(task, userDetails).join()) {
+				System.out.println("error del Task");
+				return "redirect:/tasks";
+			}
+			return "redirect:/tasks";
+		});
+	}
+
 }
