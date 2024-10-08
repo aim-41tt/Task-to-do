@@ -32,6 +32,7 @@ public class TaskService {
 		task.setUser(userRep.findByUsername(userDetails.getUsername()).get());
 		return CompletableFuture.supplyAsync(() -> taskRep.save(task));
 	}
+	
 	@Async
 	public CompletableFuture<Task> findTaskById(Long taskId, UserDetails userDetails) {
 	    return CompletableFuture.supplyAsync(() -> {
@@ -54,9 +55,20 @@ public class TaskService {
 	}
 
 	@Async
-	public CompletableFuture<Boolean> delTaskForUser(Task task) {
+	public CompletableFuture<Boolean> delTaskForUser(Task task , UserDetails userDetails) {
 		return CompletableFuture.supplyAsync(() -> {
-			return taskRep.deleteTaskById(task.getId());
+			Optional<User> userOpt = userRep.findByUsernameWithTasks(userDetails.getUsername());
+			if(userOpt.isPresent()) {
+				User user = userOpt.get();
+				Optional<Task> taskOpt = user.getTasks()
+						.parallelStream()
+						.filter(t -> t.getId().equals(task.getId()))
+						.findFirst();
+				if(taskOpt.isPresent()) {
+					return taskRep.deleteTaskById(taskOpt.get().getId());
+				}
+			}
+			return false;
 		});
 	}
 	
@@ -71,16 +83,13 @@ public class TaskService {
 
 	        if (userOpt.isPresent()) {
 	            User user = userOpt.get();
-	            boolean isUserTask = user.getTasks()
+	            Optional<Task> taskFromUser = user.getTasks()
 	            		.parallelStream()
-	                    .anyMatch(t -> t.getId().equals(task.getId()));
-	            if (!isUserTask) {
-	                return false;
-	            }
+	            		.filter(t -> t.getId().equals(task.getId()))
+	            		.findFirst();
 
-	            Optional<Task> optionalTask = taskRep.findById(task.getId());
-	            if (optionalTask.isPresent()) {
-	                Task existingTask = optionalTask.get();
+	            if (taskFromUser.isPresent()) {
+	                Task existingTask = taskFromUser.get();
 	                existingTask.setTask(task);
 	                taskRep.save(existingTask);
 	                return true;
